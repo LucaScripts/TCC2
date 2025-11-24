@@ -1,0 +1,19 @@
+Sistema Híbrido Expandido de Predição de Evasão Estudantil
+Versão: 2.0
+Data: Outubro de 2025
+Status: Pronto para Produção
+
+Componentes:
+- Machine Learning (XGBoost) com 18 features
+- Regras de Negócio Institucionais
+- Dados de Satisfação Estudantil (6 features)
+
+Resultados:
+- Casos de risco detectados: 172 (18%)
+- Melhoria vs baseline: +282%
+- F1-Score: 0.2210
+- Recall: 0.2222
+
+Autor: Lucas Dias da Silva
+Instituição: IFBA
+Orientador: Prof. Dr. Leonardo Barreto Campos
