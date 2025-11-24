@@ -1,0 +1,28 @@
+SISTEMA_EVASAO_FINAL/
+├── codigo/
+│   ├── sistema_predicao_evasao_final.py      # Sistema principal
+│   └── treinar_modelo_final.py                # Script de treinamento
+├── dados/
+│   ├── Planilhabasedados_EXPANDIDO.csv       # Dados de treinamento (expandido)
+│   ├── alunos_ativos_atual_EXPANDIDO.csv     # Dados de predição (expandido)
+│   ├── Planilhabasedados.xlsx                # Dados originais de treinamento
+│   └── alunos_ativos_atual.xlsx              # Dados originais de predição
+├── modelos/
+│   ├── modelo_xgboost_expandido.joblib       # Modelo treinado
+│   └── label_encoder_expandido.joblib        # Encoder de labels
+├── documentacao/
+│   ├── ARTIGO_FINAL_ENRIQUECIDO.md           # Artigo acadêmico (25-30 páginas)
+│   ├── RESUMO_EXECUTIVO_TCC2.md              # Resumo executivo
+│   ├── GUIA_COMPLETO_USO_SISTEMA.md          # Guia completo de uso
+│   ├── DOCUMENTACAO_SISTEMA_PRODUCAO.md      # Documentação técnica
+│   ├── GUIA_RAPIDO_PRODUCAO.md               # Guia rápido (5 minutos)
+│   ├── CHECKLIST_DEFESA_TCC2.md              # Checklist para defesa
+│   └── README_FINAL.md                        # README principal
+├── exemplos/
+│   └── exemplo_uso_basico.py                 # Exemplo de uso
+├── logs/
+│   └── (arquivos de log serão criados aqui)
+├── requirements_final.txt                     # Dependências Python
+├── INSTALACAO_RAPIDA.md                       # Este arquivo
+├── ESTRUTURA.txt                              # Estrutura do projeto
+└── README.md                                  # README do pacote

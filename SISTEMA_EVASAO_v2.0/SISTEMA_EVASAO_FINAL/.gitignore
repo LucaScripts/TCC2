@@ -1,0 +1,28 @@
+# Arquivos de log
+*.log
+logs/
+
+# Arquivos de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos gerados
+predicoes*.csv
+relatorio*.txt
+relatorio*.json
+*.joblib
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dados sensíveis
+dados/alunos*.csv
+dados/*.xlsx
