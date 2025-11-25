@@ -94,8 +94,3 @@ Próximos passos sugeridos
 2. Automatizar rotinas de ingestão (upload via interface web) e atualização do Power BI (opções de atualização automática).
 3. Definir plano de governança com responsáveis por cada etapa (dados, ML, pedagogia).
 
-Contato e revisão
------------------
-Se desejar, envio uma versão adaptada do README para a raiz do repositório ou incorporo trechos do artigo/introdução. Posso também gerar uma versão curta para apresentações (1 página) ou slides.
-
-Arquivo criado: `c:\Users\lucas\Downloads\TCC\SISTEMA_EVASAO_v2.0\SISTEMA_EVASAO_FINAL\README_TCC.md`
