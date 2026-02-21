@@ -286,6 +286,41 @@ class SistemaEvasaoHibridoExpandido:
             self.logger.warning(f"Erro ao aplicar regras para aluno: {str(e)}")
             return 'MT'
     
+    def _validar_dados(self, dados: pd.DataFrame) -> None:
+        """
+        Valida se o DataFrame de entrada possui as colunas obrigatórias.
+
+        As features quantitativas são obrigatórias pois alimentam tanto o
+        modelo ML quanto as regras de negócio. As features de satisfação são
+        opcionais — se ausentes, serão preenchidas com 0 pelo pré-processamento
+        (equivale a aluno sem dados de pesquisa).
+
+        Args:
+            dados: DataFrame com dados dos alunos
+
+        Raises:
+            ValueError: Se alguma coluna quantitativa obrigatória estiver ausente
+        """
+        colunas_ausentes = [col for col in FEATURES_QUANTITATIVAS if col not in dados.columns]
+        if colunas_ausentes:
+            raise ValueError(
+                f"Colunas obrigatórias ausentes no arquivo de entrada: {colunas_ausentes}. "
+                f"Verifique se o arquivo possui as 12 features quantitativas: {FEATURES_QUANTITATIVAS}"
+            )
+
+        satisfacao_ausentes = [col for col in FEATURES_SATISFACAO if col not in dados.columns]
+        if satisfacao_ausentes:
+            self.logger.warning(
+                f"Features de satisfação ausentes: {satisfacao_ausentes}. "
+                f"Serão preenchidas com 0 (ausência de dados de pesquisa). "
+                f"Para resultados mais precisos, integre dados reais de pesquisa de satisfação."
+            )
+
+        if len(dados) == 0:
+            raise ValueError("O arquivo de entrada não contém registros.")
+
+        self.logger.info(f"Validação concluída: {len(dados)} registros, todas as colunas obrigatórias presentes.")
+
     def _preprocessar_dados(self, dados: pd.DataFrame) -> pd.DataFrame:
         """
         Preprocessa os dados para o modelo.
@@ -325,7 +360,10 @@ class SistemaEvasaoHibridoExpandido:
         """
         try:
             self.logger.info(f"Iniciando predições para {len(dados)} alunos")
-            
+
+            # Validar colunas de entrada
+            self._validar_dados(dados)
+
             # Preprocessar dados
             dados_prep = self._preprocessar_dados(dados)
             
@@ -350,8 +388,8 @@ class SistemaEvasaoHibridoExpandido:
             
             # Aplicar regras de negócio
             predicoes_finais = []
-            for idx, row in dados_prep.iterrows():
-                predicao_ml = predicoes_ml_str[idx]
+            for pos, (idx, row) in enumerate(dados_prep.iterrows()):
+                predicao_ml = predicoes_ml_str[pos]
                 predicao_regra = self._aplicar_regras_negocio(row)
                 
                 # Regras sobrescrevem ML se indicarem risco
