@@ -1,121 +1,121 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Este arquivo fornece orientações ao Claude Code (claude.ai/code) ao trabalhar com o código neste repositório.
 
-## Project Overview
+## Visão Geral do Projeto
 
-Academic research project (TCC - Trabalho de Conclusão de Curso) from IFBA implementing a **Hybrid System for Predicting Academic Dropout Risk** in technical courses. The system combines XGBoost ML with business rules and student satisfaction data. Three versioned iterations exist showing the system's evolution.
+Projeto de pesquisa acadêmica (TCC - Trabalho de Conclusão de Curso) do IFBA implementando um **Sistema Híbrido de Predição de Risco de Evasão Acadêmica** em cursos técnicos. O sistema combina ML com XGBoost, regras de negócio e dados de satisfação dos alunos. Existem três versões iterativas que mostram a evolução do sistema.
 
-## Commands
+## Comandos
 
-### V2.0 (Current Production Version)
-Working directory: `SISTEMA_EVASAO_v2.0/SISTEMA_EVASAO_FINAL/`
+### V2.0 (Versão de Produção Atual)
+Diretório de trabalho: `SISTEMA_EVASAO_v2.0/SISTEMA_EVASAO_FINAL/`
 
 ```bash
-# Install dependencies
+# Instalar dependências
 pip install -r requirements_final.txt
 
-# Train model from scratch
+# Treinar modelo do zero
 python codigo/treinar_modelo_final.py
 
-# Run prediction system
+# Executar sistema de predição
 python codigo/sistema_predicao_evasao_final.py
 
-# Run usage example
+# Executar exemplo de uso
 python exemplos/exemplo_uso_basico.py
 ```
 
-### V1.5 (Hybrid with Web Interface)
-Working directory: `SISTEMA_EVASAO_v1.5/SISTEMA_PREDI--O_EVASAO-TCC2-main/SISTEMA_PREDIÇÃO_EVASAO/`
+### V1.5 (Híbrido com Interface Web)
+Diretório de trabalho: `SISTEMA_EVASAO_v1.5/SISTEMA_PREDI--O_EVASAO-TCC2-main/SISTEMA_PREDIÇÃO_EVASAO/`
 
 ```bash
-# Run automated tests
+# Executar testes automatizados
 python test_sistema.py
 
-# Run main system (verbose mode)
+# Executar sistema principal (modo verboso)
 python principal.py --verboso
 
-# Run with specific input file
+# Executar com arquivo de entrada específico
 python principal.py data/raw/alunos_ativos_atual.xlsx
 
-# Start web interface
+# Iniciar interface web
 python interface_web.py
 ```
 
-### Development tools (applicable to all versions)
+### Ferramentas de desenvolvimento (aplicáveis a todas as versões)
 ```bash
-black .          # code formatting
+black .          # formatação de código
 flake8 .         # linting
-pytest           # run tests
+pytest           # executar testes
 ```
 
-## Architecture
+## Arquitetura
 
-### Three Versioned Systems
+### Três Sistemas Versionados
 
-| Version | Location | Features | At-Risk Cases Detected |
-|---------|----------|----------|----------------------|
-| v1.0 | `SISTEMA_EVASAO_v1.0/` | ML-only baseline (RF, LR, XGBoost) | 45 (4.7%) |
-| v1.5 | `SISTEMA_EVASAO_v1.5/` | Hybrid + modular architecture + web UI | 117 (12.3%) |
-| v2.0 | `SISTEMA_EVASAO_v2.0/` | Hybrid + 6 satisfaction features | 172 (18.0%) |
+| Versão | Localização | Funcionalidades | Casos de Risco Detectados |
+|--------|-------------|-----------------|--------------------------|
+| v1.0 | `SISTEMA_EVASAO_v1.0/` | Baseline apenas ML (RF, LR, XGBoost) | 45 (4,7%) |
+| v1.5 | `SISTEMA_EVASAO_v1.5/` | Híbrido + arquitetura modular + UI web | 117 (12,3%) |
+| v2.0 | `SISTEMA_EVASAO_v2.0/` | Híbrido + 6 features de satisfação | 172 (18,0%) |
 
-### V2.0 Core Components (`codigo/`)
+### Componentes Principais da V2.0 (`codigo/`)
 
-**`sistema_predicao_evasao_final.py`** — Main class `SistemaEvasaoHibridoExpandido` (570 lines):
-- Loads input data (CSV/Excel), preprocesses, applies ML inference, then overlays business rules
-- Outputs CSV report ready for Power BI or AcadWeb institutional system
+**`sistema_predicao_evasao_final.py`** — Classe principal `SistemaEvasaoHibridoExpandido` (570 linhas):
+- Carrega dados de entrada (CSV/Excel), pré-processa, aplica inferência ML e sobrepõe regras de negócio
+- Gera relatório CSV pronto para Power BI ou sistema institucional AcadWeb
 
-**`treinar_modelo_final.py`** — Training pipeline (283 lines):
-- 5-fold StratifiedKFold cross-validation
-- Serializes model and encoders via joblib
-- Reports accuracy (0.7201) and F1 (0.2216)
+**`treinar_modelo_final.py`** — Pipeline de treinamento (283 linhas):
+- Validação cruzada StratifiedKFold com 5 folds
+- Serializa modelo e encoders via joblib
+- Reporta acurácia (0,7201) e F1 (0,2216)
 
-### Prediction Pipeline
+### Pipeline de Predição
 
 ```
-Input Data (CSV/Excel, 18 features)
-    ↓ Preprocessing (median imputation, StandardScaler)
+Dados de Entrada (CSV/Excel, 18 features)
+    ↓ Pré-processamento (imputação por mediana, StandardScaler)
     ↓
-    ├─→ XGBoost ML (10-class classifier)
-    │       12 quantitative features + 6 satisfaction features
+    ├─→ ML XGBoost (classificador de 10 classes)
+    │       12 features quantitativas + 6 features de satisfação
     │
-    └─→ Business Rules Engine (cascading priority)
+    └─→ Motor de Regras de Negócio (prioridade em cascata)
             LFI → LFR → LAC → NC → NF → MT
     ↓
-Merged Results (ML predictions override rule classifications)
+Resultados Mesclados (predições ML sobrepõem classificações por regras)
     ↓
-CSV Export (Power BI / AcadWeb compatible)
+Exportação CSV (compatível com Power BI / AcadWeb)
 ```
 
-### Business Rule Priority Order (V2.0/V1.5)
+### Ordem de Prioridade das Regras de Negócio (V2.0/V1.5)
 
-Rules are applied in this cascade — the first matching rule wins:
-1. **LFI** (Limpeza Financeira): ≥2 financial pendencies
-2. **LFR** (Limpeza de Frequência): ≥12 consecutive absences
-3. **LAC** (Limpeza Acadêmica): ≥1 academic pendency
-4. **NC** (Nunca Compareceu): ≥5 absences
-5. **NF** (Não Formados): course completed + ≤2 pendencies
-6. **MT** (Matriculado): default
+As regras são aplicadas em cascata — a primeira regra que corresponder vence:
+1. **LFI** (Limpeza Financeira): ≥2 pendências financeiras
+2. **LFR** (Limpeza de Frequência): ≥12 faltas consecutivas
+3. **LAC** (Limpeza Acadêmica): ≥1 pendência acadêmica
+4. **NC** (Nunca Compareceu): ≥5 faltas
+5. **NF** (Não Formados): curso concluído + ≤2 pendências
+6. **MT** (Matriculado): padrão
 
-### V1.5 Modular Architecture (`codigo_fonte/`)
+### Arquitetura Modular da V1.5 (`codigo_fonte/`)
 
-More structured than V2.0, organized into:
-- `configuracao/` — configuration management
-- `modelos/` — ML model wrappers
-- `nucleo/` — core prediction orchestration
-- `regras_negocio/` — business rule implementations
-- `utilitarios/` — logging and data utilities
+Mais estruturada que a V2.0, organizada em:
+- `configuracao/` — gerenciamento de configurações
+- `modelos/` — wrappers de modelos ML
+- `nucleo/` — orquestração central das predições
+- `regras_negocio/` — implementações das regras de negócio
+- `utilitarios/` — utilitários de logging e dados
 
-### Configuration (`config.ini` — V2.0 only)
+### Configuração (`config.ini` — apenas V2.0)
 
-Stores system metadata, model parameters, performance metrics, and detection stats. Not used at runtime for prediction logic — primarily for documentation and versioning.
+Armazena metadados do sistema, parâmetros do modelo, métricas de desempenho e estatísticas de detecção. Não é usado em tempo de execução para a lógica de predição — serve principalmente para documentação e versionamento.
 
-### Target Classes (10 enrollment statuses)
+### Classes Alvo (10 situações de matrícula)
 
 `MT`, `LFI`, `LFR`, `LAC`, `NC`, `NF`, `CAC`, `CAN`, `FO`, `TF`
 
-### Data
+### Dados
 
-- Training: `dados/Planilhabasedados_EXPANDIDO.csv` (~4,516 records, 2020–2025)
-- Operational input: Excel or CSV with 18 required columns
-- The 6 satisfaction features (motivation, intent to drop out, professor evaluation, etc.) are currently simulated in the dataset — real survey integration is a pending improvement
+- Treinamento: `dados/Planilhabasedados_EXPANDIDO.csv` (~4.516 registros, 2020–2025)
+- Entrada operacional: Excel ou CSV com 18 colunas obrigatórias
+- As 6 features de satisfação (motivação, intenção de desistir, avaliação do professor, etc.) são atualmente simuladas no dataset — a integração com pesquisa real é uma melhoria pendente
