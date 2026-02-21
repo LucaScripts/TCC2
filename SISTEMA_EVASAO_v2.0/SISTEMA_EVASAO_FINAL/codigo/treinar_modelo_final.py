@@ -32,6 +32,10 @@ from xgboost import XGBClassifier
 
 warnings.filterwarnings('ignore')
 
+# Configurar encoding UTF-8 para evitar UnicodeEncodeError no terminal Windows
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # ============================================================================
 # CONFIGURAÇÃO DE LOGGING
 # ============================================================================
@@ -59,9 +63,32 @@ FEATURES_SATISFACAO = [
 
 TODAS_FEATURES = FEATURES_QUANTITATIVAS + FEATURES_SATISFACAO
 
+# Mapeamento de nomes de colunas do CSV exportado pelo AcadWeb para os nomes esperados pelo modelo
+MAPA_COLUNAS_CSV = {
+    'situacao': 'Situacao',
+    'pendacad': 'Pend_Acad',
+    'pendfinanc': 'Pend_Financ',
+    'faltasconsecutivas': 'Faltas_Consecutivas',
+    'sexo': 'Sexo',
+    'moduloatual': 'Semestre',
+    'turmaatual': 'Turno',
+}
+
 # ============================================================================
 # FUNÇÕES DE TREINAMENTO
 # ============================================================================
+
+def normalizar_colunas_csv(dados: pd.DataFrame) -> pd.DataFrame:
+    """
+    Renomeia colunas do CSV exportado pelo AcadWeb para os nomes esperados pelo modelo
+    e converte colunas de features do tipo object para numérico.
+    """
+    dados = dados.rename(columns=MAPA_COLUNAS_CSV)
+    for col in TODAS_FEATURES:
+        if col in dados.columns and dados[col].dtype == 'object':
+            dados[col] = pd.to_numeric(dados[col], errors='coerce')
+    return dados
+
 
 def carregar_dados(caminho_arquivo: str) -> pd.DataFrame:
     """Carrega dados de treinamento."""
@@ -80,8 +107,8 @@ def carregar_dados(caminho_arquivo: str) -> pd.DataFrame:
 def preprocessar_dados(dados: pd.DataFrame) -> pd.DataFrame:
     """Preprocessa os dados."""
     logger.info("Preprocessando dados...")
-    
-    dados_prep = dados.copy()
+
+    dados_prep = normalizar_colunas_csv(dados.copy())
     
     # Preencher valores faltantes
     for col in TODAS_FEATURES:
@@ -219,7 +246,13 @@ def main():
         # 3. Preparar features e target
         logger.info("Etapa 3: Preparando features e target...")
         X = dados_prep[TODAS_FEATURES].values
-        y = dados_prep['Situacao'].values if 'Situacao' in dados_prep.columns else dados_prep.iloc[:, -1].values
+        # Após normalizar_colunas_csv, a coluna alvo já é 'Situacao'
+        if 'Situacao' not in dados_prep.columns:
+            raise ValueError(
+                "Coluna alvo 'situacao' não encontrada no dataset. "
+                "Verifique se o arquivo de treinamento possui a coluna 'situacao' com as classes de matrícula."
+            )
+        y = dados_prep['Situacao'].values
         
         # 4. Codificar labels
         logger.info("Etapa 4: Codificando labels...")

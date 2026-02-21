@@ -52,6 +52,10 @@ from xgboost import XGBClassifier
 # Suprimir warnings desnecessários
 warnings.filterwarnings('ignore')
 
+# Configurar encoding UTF-8 para evitar UnicodeEncodeError no terminal Windows
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # ============================================================================
 # CONFIGURAÇÃO DE LOGGING
 # ============================================================================
@@ -95,6 +99,16 @@ logger = configurar_logging()
 # DEFINIÇÕES DE CONSTANTES
 # ============================================================================
 
+# Mapeamento de nomes de colunas do CSV exportado pelo AcadWeb para os nomes esperados pelo modelo
+MAPA_COLUNAS_CSV = {
+    'pendacad': 'Pend_Acad',
+    'pendfinanc': 'Pend_Financ',
+    'faltasconsecutivas': 'Faltas_Consecutivas',
+    'sexo': 'Sexo',
+    'moduloatual': 'Semestre',
+    'turmaatual': 'Turno',
+}
+
 # Features quantitativas originais (12)
 FEATURES_QUANTITATIVAS = [
     'Pend_Financ',
@@ -137,6 +151,9 @@ CATEGORIAS_RISCO = {
     'FO': 'Fora',
     'TF': 'Transferência'
 }
+
+# Features obrigatórias: usadas pelas regras de negócio (não podem ser zero implícito)
+FEATURES_OBRIGATORIAS = ['Pend_Financ', 'Faltas_Consecutivas', 'Pend_Acad']
 
 # Mapeamento de categorias para risco
 MAPEAMENTO_RISCO = {
@@ -286,6 +303,20 @@ class SistemaEvasaoHibridoExpandido:
             self.logger.warning(f"Erro ao aplicar regras para aluno: {str(e)}")
             return 'MT'
     
+    def _normalizar_colunas(self, dados: pd.DataFrame) -> pd.DataFrame:
+        """
+        Renomeia colunas do CSV exportado pelo AcadWeb para os nomes esperados pelo modelo
+        e converte colunas de features do tipo object para numérico.
+
+        Permite que arquivos exportados diretamente do AcadWeb (com nomes como
+        'pendacad', 'faltasconsecutivas', etc.) sejam usados sem alteração manual.
+        """
+        dados = dados.rename(columns=MAPA_COLUNAS_CSV)
+        for col in TODAS_FEATURES:
+            if col in dados.columns and dados[col].dtype == 'object':
+                dados[col] = pd.to_numeric(dados[col], errors='coerce')
+        return dados
+
     def _validar_dados(self, dados: pd.DataFrame) -> None:
         """
         Valida se o DataFrame de entrada possui as colunas obrigatórias.
@@ -301,25 +332,32 @@ class SistemaEvasaoHibridoExpandido:
         Raises:
             ValueError: Se alguma coluna quantitativa obrigatória estiver ausente
         """
-        colunas_ausentes = [col for col in FEATURES_QUANTITATIVAS if col not in dados.columns]
-        if colunas_ausentes:
+        if len(dados) == 0:
+            raise ValueError("O arquivo de entrada não contém registros.")
+
+        # Features obrigatórias: usadas pelas regras de negócio
+        criticas_ausentes = [col for col in FEATURES_OBRIGATORIAS if col not in dados.columns]
+        if criticas_ausentes:
             raise ValueError(
-                f"Colunas obrigatórias ausentes no arquivo de entrada: {colunas_ausentes}. "
-                f"Verifique se o arquivo possui as 12 features quantitativas: {FEATURES_QUANTITATIVAS}"
+                f"Colunas obrigatórias ausentes no arquivo de entrada: {criticas_ausentes}. "
+                f"Verifique se o arquivo possui as colunas: {FEATURES_OBRIGATORIAS}"
+            )
+
+        # Features importantes para o ML — aviso se ausentes (serão preenchidas com 0)
+        quant_ausentes = [col for col in FEATURES_QUANTITATIVAS if col not in dados.columns and col not in FEATURES_OBRIGATORIAS]
+        if quant_ausentes:
+            self.logger.warning(
+                f"Features quantitativas ausentes (serão preenchidas com 0): {quant_ausentes}"
             )
 
         satisfacao_ausentes = [col for col in FEATURES_SATISFACAO if col not in dados.columns]
         if satisfacao_ausentes:
             self.logger.warning(
-                f"Features de satisfação ausentes: {satisfacao_ausentes}. "
-                f"Serão preenchidas com 0 (ausência de dados de pesquisa). "
+                f"Features de satisfação ausentes (serão preenchidas com 0): {satisfacao_ausentes}. "
                 f"Para resultados mais precisos, integre dados reais de pesquisa de satisfação."
             )
 
-        if len(dados) == 0:
-            raise ValueError("O arquivo de entrada não contém registros.")
-
-        self.logger.info(f"Validação concluída: {len(dados)} registros, todas as colunas obrigatórias presentes.")
+        self.logger.info(f"Validação concluída: {len(dados)} registros.")
 
     def _preprocessar_dados(self, dados: pd.DataFrame) -> pd.DataFrame:
         """
@@ -360,6 +398,9 @@ class SistemaEvasaoHibridoExpandido:
         """
         try:
             self.logger.info(f"Iniciando predições para {len(dados)} alunos")
+
+            # Normalizar nomes de colunas (compatibilidade com exportação AcadWeb)
+            dados = self._normalizar_colunas(dados.copy())
 
             # Validar colunas de entrada
             self._validar_dados(dados)
