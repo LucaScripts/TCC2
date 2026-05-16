@@ -50,21 +50,21 @@ Como executar (exemplo mínimo — PowerShell)
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r c:\Users\lucas\Downloads\TCC\SISTEMA_EVASAO_v2.0\SISTEMA_EVASAO_FINAL\requirements_final.txt
+pip install -r SISTEMA_EVASAO_v2.0/SISTEMA_EVASAO_FINAL/requirements_final.txt
 ```
 
 2) Treinar modelo (exemplo):
 
 ```powershell
-python c:\Users\lucas\Downloads\TCC\SISTEMA_EVASAO_v2.0\SISTEMA_EVASAO_FINAL\codigo\treinar_modelo_final.py
+python SISTEMA_EVASAO_v2.0/SISTEMA_EVASAO_FINAL/codigo/treinar_modelo_final.py
 ```
 
 3) Executar rotina de produção (inferência + regras):
 
 ```powershell
-python c:\Users\lucas\Downloads\TCC\SISTEMA_EVASAO_v2.0\SISTEMA_EVASAO_FINAL\codigo\sistema_predicao_evasao_final.py \
-  --input c:\Users\lucas\Downloads\TCC\SISTEMA_EVASAO_v2.0\SISTEMA_EVASAO_FINAL\dados\operacionais.csv \
-  --output c:\Users\lucas\Downloads\TCC\SISTEMA_EVASAO_v2.0\SISTEMA_EVASAO_FINAL\output\predicoes_YYYYMM.csv
+python SISTEMA_EVASAO_v2.0/SISTEMA_EVASAO_FINAL/codigo/sistema_predicao_evasao_final.py \
+  --input SISTEMA_EVASAO_v2.0/SISTEMA_EVASAO_FINAL/dados/operacionais.csv \
+  --output SISTEMA_EVASAO_v2.0/SISTEMA_EVASAO_FINAL/output/predicoes_YYYYMM.csv
 ```
 
 Observações:
